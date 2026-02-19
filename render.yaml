@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: restaurant-faq-bot
+    env: python
+    startCommand: gunicorn app:app
+    plan: free
