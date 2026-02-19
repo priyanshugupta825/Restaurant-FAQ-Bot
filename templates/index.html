@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restaurant FAQ Bot</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+
+  .container { max-width: 700px; margin: 0 auto; }
+
+  /* Header */
+  .header { background: #8B4513; color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
+  .header h1 { font-size: 1.4rem; }
+  .header p { font-size: 0.85rem; opacity: 0.8; margin-top: 5px; }
+
+  /* FAQ Categories */
+  .faq-categories { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .cat-btn { background: white; border: 2px solid #8B4513; color: #8B4513; border-radius: 20px; padding: 8px 16px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+  .cat-btn:hover { background: #8B4513; color: white; }
+
+  /* FAQ List */
+  .faq-list { background: white; border-radius: 10px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  .faq-item { border-bottom: 1px solid #eee; }
+  .faq-item:last-child { border-bottom: none; }
+  .faq-question { padding: 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; font-weight: 500; color: #333; transition: background 0.2s; }
+  .faq-question:hover { background: #fdf5f0; }
+  .faq-question.active { background: #fdf5f0; color: #8B4513; }
+  .faq-answer { display: none; padding: 0 16px 16px; font-size: 0.85rem; color: #555; line-height: 1.8; white-space: pre-wrap; border-top: 1px solid #eee; background: #fdf5f0; }
+  .faq-answer.show { display: block; }
+  .arrow { font-size: 0.7rem; transition: transform 0.2s; }
+  .faq-question.active .arrow { transform: rotate(180deg); }
+
+  /* Chat Section */
+  .chat-title { font-size: 0.9rem; font-weight: 600; color: #555; margin-bottom: 10px; }
+  .chat-box { background: white; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; }
+  .messages { height: 280px; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { display: flex; gap: 8px; }
+  .msg.user { flex-direction: row-reverse; }
+  .bubble { padding: 10px 14px; border-radius: 12px; font-size: 0.83rem; line-height: 1.6; max-width: 80%; white-space: pre-wrap; }
+  .bubble.bot { background: #f0f0f0; color: #333; border-top-left-radius: 2px; }
+  .bubble.user { background: #8B4513; color: white; border-top-right-radius: 2px; }
+  .bubble.error { background: #fde8e8; color: #c00; }
+  .typing { display: none; gap: 5px; align-items: center; padding: 10px 14px; background: #f0f0f0; border-radius: 12px; width: fit-content; }
+  .typing.show { display: flex; }
+  .dot { width: 6px; height: 6px; background: #999; border-radius: 50%; animation: bounce 1.2s infinite; }
+  .dot:nth-child(2){animation-delay:.2s} .dot:nth-child(3){animation-delay:.4s}
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+  .input-area { padding: 12px; border-top: 1px solid #eee; display: flex; gap: 8px; }
+  input { flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 10px 14px; font-size: 0.83rem; outline: none; }
+  input:focus { border-color: #8B4513; }
+  .send-btn { background: #8B4513; color: white; border: none; border-radius: 8px; padding: 10px 18px; cursor: pointer; font-size: 0.83rem; }
+  .send-btn:hover { background: #6B3410; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🍽  Hotel New Guru Deo Basera — FAQ</h1>
+    <p>Find answers instantly or ask your own question below</p>
+  </div>
+
+  <!-- Category Filter -->
+  <div class="faq-categories">
+    <button class="cat-btn" onclick="filterFAQ('all')">All</button>
+    <button class="cat-btn" onclick="filterFAQ('menu')">📋 Menu</button>
+    <button class="cat-btn" onclick="filterFAQ('dietary')">🥗 Dietary</button>
+    <button class="cat-btn" onclick="filterFAQ('hours')">🕐 Hours</button>
+    <button class="cat-btn" onclick="filterFAQ('booking')">📞 Booking</button>
+    <button class="cat-btn" onclick="filterFAQ('payment')">💳 Payment</button>
+  </div>
+
+  <!-- FAQ List -->
+  <div class="faq-list" id="faqList">
+
+    <div class="faq-item" data-cat="menu">
+      <div class="faq-question" onclick="toggle(this)">
+        📋 What is on the menu? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-answer">STARTERS:
+- Tomato Soup (V, GF) - ₹120
+- Garlic Bread (V) - ₹80
+- Chicken Wings (GF) - ₹220
+- Bruschetta (V) - ₹150
+
+MAINS:
+- Grilled Salmon (GF, DF) - ₹480
+- Margherita Pizza (V) - ₹300
+- Mushroom Risotto (V, GF) - ₹320
+- Grilled Chicken (GF, DF) - ₹380
+- Vegan Pasta (VG, DF) - ₹280
+
+DESSERTS:
+- Chocolate Lava Cake (V) - ₹180
+- Fruit Sorbet (VG, GF, DF) - ₹130
+- Cheesecake (V) - ₹160
+
+DRINKS:
+- Fresh Juices - ₹80 | Soft Drinks - ₹60 | Coffee/Tea - ₹60</div>
+    </div>
+
+    <div class="faq-item" data-cat="menu">
+      <div class="faq-question" onclick="toggle(this)">
+        ⭐ What are your most popular dishes? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-answer">Our top picks:
+1. Grilled Salmon (GF, DF) - ₹480
+2. Margherita Pizza (V) - ₹300
+3. Mushroom Risotto (V, GF) - ₹320
+4. Chocolate Lava Cake (V) - ₹180
+5. Chicken Wings (GF) - ₹220</div>
+    </div>
+
+    <div class="faq-item" data-cat="dietary">
+      <div class="faq-question" onclick="toggle(this)">
+        🥗 What vegetarian options do you have? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-answer">Vegetarian dishes (V):
+- Tomato Soup (GF) - ₹120
+- Garlic Bread - ₹80
+- Bruschetta - ₹150
+- Margherita Pizza - ₹300
+- Mushroom Risotto (GF) - ₹320
+- Chocolate Lava Cake - ₹180
+- Cheesecake - ₹160</div>
+    </div>
+
+    <div class="faq-item" data-cat="dietary">
+      <div class="faq-question" onclick="toggle(this)">
+        🌱 What vegan options do you have? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-answer">Vegan dishes (VG):
+- Vegan Pasta (DF) - ₹280
+- Fruit Sorbet (GF, DF) - ₹130
+
+All vegan dishes are also dairy-free and vegetarian.</div>
+    </div>
+
+    <div class="faq-item" data-cat="dietary">
+      <div class="faq-question" onclick="toggle(this)">
+        🌾 What gluten-free options do you have? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-answer">Gluten-Free dishes (GF):
+- Tomato Soup (V) - ₹120
+- Chicken Wings - ₹220
+- Grilled Salmon (DF) - ₹480
+- Mushroom Risotto (V) - ₹320
+- Grilled Chicken (DF) - ₹380
+- Fruit Sorbet (VG) - ₹130</div>
+    </div>
+
+    <div class="faq-item" data-cat="dietary">
+      <div class="faq-question" onclick="toggle(this)">
+        ⚠️ What is your allergy policy? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-answer">• Please inform your server of any allergies before ordering
+- We can modify most dishes to accommodate dietary needs
+- Kitchen handles nuts, dairy and gluten
+- Cross-contamination is possible
+- For severe allergies call us: (555) 123-4567</div>
+    </div>
+
+    <div class="faq-item" data-cat="hours">
+      <div class="faq-question" onclick="toggle(this)">
+        🕐 What are your opening hours? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-answer">• Monday – Thursday: 11am – 10pm
+- Friday – Saturday: 11am – 11pm
+- Sunday: 12pm – 9pm
+
+Open on all public holidays!</div>
+    </div>
+
+    <div class="faq-item" data-cat="booking">
+      <div class="faq-question" onclick="toggle(this)">
+        📞 How do I make a reservation? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-answer">• Call us: (555) 123-4567
+- Email: reservations@labella.com
+- Book online: www.hotelgurudebasera.com/book
+
+Recommended to book 48 hours in advance for weekends.
+Walk-ins welcome based on availability!</div>
+    </div>
+
+    <div class="faq-item" data-cat="booking">
+      <div class="faq-question" onclick="toggle(this)">
+        📍 Where are you located? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-answer">123 Main Street, Downtown
+
+🚗 Free parking available behind the restaurant
+🚇 5 min walk from City Centre metro station</div>
+    </div>
+
+    <div class="faq-item" data-cat="payment">
+      <div class="faq-question" onclick="toggle(this)">
+        💳 What payment methods do you accept? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-answer">• Cash
+- All major Credit / Debit Cards
+- UPI (Google Pay, PhonePe, Paytm)
+- Net Banking
+
+No extra charges for card or UPI payments.</div>
+    </div>
+
+    <div class="faq-item" data-cat="payment">
+      <div class="faq-question" onclick="toggle(this)">
+        💰 What is the price range? <span class="arrow">▼</span>
+      </div>
+      <div class="faq-answer">• Starters: ₹80 – ₹220
+- Mains: ₹280 – ₹480
+- Desserts: ₹130 – ₹180
+- Drinks: ₹40 – ₹80
+
+All prices include taxes.</div>
+    </div>
+
+  </div>
+
+  <!-- Chat -->
+  <div class="chat-title">💬 Still have a question? Ask below:</div>
+  <div class="chat-box">
+    <div class="messages" id="messages">
+      <div class="msg bot">
+        <div class="bubble bot">👋 Hi! Can't find your answer above? Ask me anything about our menu, dietary options, hours or reservations!</div>
+      </div>
+      <div class="msg bot" id="typingRow" style="display:none">
+        <div class="typing show"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      </div>
+    </div>
+    <div class="input-area">
+      <input type="text" id="input" placeholder="Type your question..." onkeydown="if(event.key==='Enter') send()">
+      <button class="send-btn" onclick="send()">Send</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const messagesEl = document.getElementById('messages');
+  const inputEl = document.getElementById('input');
+  const typingRow = document.getElementById('typingRow');
+  let history = [], busy = false;
+
+  // Toggle FAQ answer
+  function toggle(el) {
+    const answer = el.nextElementSibling;
+    const isOpen = answer.classList.contains('show');
+    document.querySelectorAll('.faq-answer').forEach(a => a.classList.remove('show'));
+    document.querySelectorAll('.faq-question').forEach(q => q.classList.remove('active'));
+    if (!isOpen) { answer.classList.add('show'); el.classList.add('active'); }
+  }
+
+  // Filter by category
+  function filterFAQ(cat) {
+    document.querySelectorAll('.faq-item').forEach(item => {
+      item.style.display = (cat === 'all' || item.dataset.cat === cat) ? 'block' : 'none';
+    });
+    document.querySelectorAll('.faq-answer').forEach(a => a.classList.remove('show'));
+    document.querySelectorAll('.faq-question').forEach(q => q.classList.remove('active'));
+  }
+
+  // Chat
+  function addMsg(text, role, isError=false) {
+    const row = document.createElement('div');
+    row.className = `msg ${role}`;
+    row.innerHTML = `<div class="bubble ${isError?'error':role}">${text}</div>`;
+    messagesEl.insertBefore(row, typingRow);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function showTyping(v) { typingRow.style.display=v?'flex':'none'; messagesEl.scrollTop=messagesEl.scrollHeight; }
+
+  async function send() {
+    const text = inputEl.value.trim();
+    if (!text || busy) return;
+    busy = true;
+    inputEl.value = '';
+    addMsg(text, 'user');
+    showTyping(true);
+    try {
+      const res = await fetch('/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:text, history}) });
+      const data = await res.json();
+      if (data.error) { addMsg(data.error, 'bot', true); }
+      else {
+        history.push({role:'user', content:text});
+        history.push({role:'assistant', content:data.reply});
+        addMsg(data.reply, 'bot');
+      }
+    } catch(e) { addMsg('Network error — is the server running?', 'bot', true); }
+    finally { showTyping(false); busy=false; inputEl.focus(); }
+  }
+</script>
+</body>
+</html>
